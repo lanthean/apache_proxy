@@ -1,0 +1,52 @@
+# use version 3 of the docker compose syntax
+version: '2'
+services:
+  # we named our first service 'web'
+  web:
+    # pass a hostname to the container (optinal)
+    hostname: martinbortel.cz
+    
+    # build a custom image 
+    build:
+      context: /data/sandbox/docker/projects/apache_proxy/
+      dockerfile: ./martinbortel.cz/mb.dockerfile
+    
+    # a name for easier reference
+    image: martinbortel.cz
+
+    # map host port 8080 to container port 80
+    ports:
+        - 8080:80
+        - 4443:443
+    environment:
+        - VIRTUAL_HOST=martinbortel.cz
+    
+    # volumes are like shared folders
+    # container will see your local code changes
+    volumes:
+      - ./martinbortel.cz/app/:/var/www/html/
+    
+    # first load the 'db' service 
+    depends_on:
+      - db
+    
+    # make 'db' a known service/host inside of 'web'
+    # use this to make a mysql connection to host 'db'
+    links:
+      - db
+  
+  db:
+    # use a default image
+    image: mysql:5.7
+
+    # again, port mapping 
+    # e.g. to use Sequel Pro on our mac
+    ports:
+      - 3306:3306
+
+    # the mysql image uses these to create database and users
+    environment: 
+      MYSQL_ROOT_PASSWORD: something-secure-here
+      MYSQL_DATABASE: mb
+      MYSQL_USER: root
+      MYSQL_PASSWORD: something-secure-here
